@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Screenshot Upload - Anokha Event</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="upload-card">
+            <div class="header">
+                <h1>💳 Payment Verification</h1>
+                <p class="subtitle">Upload your payment screenshot</p>
+                <div id="currentDate" class="current-date">Loading...</div>
+                <div id="eventDayBadge" class="event-badge">Loading...</div>
+            </div>
+
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="shopName">Shop Name</label>
+                    <input 
+                        type="text" 
+                        id="shopName" 
+                        name="shopName" 
+                        required 
+                        placeholder="Enter shop name"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="screenshot">Payment Screenshot</label>
+                    <div class="file-input-wrapper">
+                        <input 
+                            type="file" 
+                            id="screenshot" 
+                            name="screenshot" 
+                            accept="image/*,application/pdf" 
+                            required
+                        >
+                        <div class="file-input-label" id="fileLabel">
+                            <span class="upload-icon">📸</span>
+                            <span class="upload-text">Tap to select screenshot</span>
+                            <span class="upload-hint">JPG, PNG or PDF (Max 10MB)</span>
+                        </div>
+                    </div>
+                    <div id="imagePreview" class="image-preview"></div>
+                </div>
+
+                <button type="submit" id="submitBtn" class="submit-btn">
+                    <span id="btnText">Upload Screenshot</span>
+                    <span id="btnLoader" class="loader hidden"></span>
+                </button>
+            </form>
+
+            <div id="message" class="message hidden"></div>
+        </div>
+
+        <div class="footer">
+            <p>Payment screenshots are securely stored for verification purposes only</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

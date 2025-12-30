@@ -139,7 +139,13 @@ app.post('/api/upload', upload.single('screenshot'), async (req, res) => {
     }
 })();
 
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📅 Event Days: ${process.env.EVENT_DAY_1}, ${process.env.EVENT_DAY_2}, ${process.env.EVENT_DAY_3}`);
-});
+// Only start server if not in Vercel serverless environment
+if (process.env.VERCEL !== '1') {
+    app.listen(PORT, () => {
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
+        console.log(`📅 Event Days: ${process.env.EVENT_DAY_1}, ${process.env.EVENT_DAY_2}, ${process.env.EVENT_DAY_3}`);
+    });
+}
+
+// Export for Vercel serverless
+module.exports = app;

@@ -18,11 +18,10 @@ cloudinary.config({
  */
 async function uploadToCloudinary(filePath, originalFileName, eventDate, metadata) {
     try {
-        // Create unique filename with shop name
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        // Use shop name as filename
         const sanitizedShopName = metadata.shopName.replace(/[^a-zA-Z0-9]/g, '_');
         const extension = path.extname(originalFileName).toLowerCase();
-        const publicId = `${sanitizedShopName}_${timestamp}`;
+        const publicId = sanitizedShopName;
 
         // Upload to Cloudinary
         // Folder structure: Anokha_Payments/YYYY-MM-DD/filename

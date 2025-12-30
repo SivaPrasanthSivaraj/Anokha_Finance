@@ -7,19 +7,17 @@ const cors = require('cors');
 const { uploadToCloudinary, verifyConnection } = require('./services/cloudinary');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Create uploads directory only if not in serverless environment
-if (process.env.VERCEL !== '1') {
-    const uploadsDir = path.join(__dirname, 'uploads');
-    if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir);
-    }
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
 }
 
 // Configure multer for file uploads
@@ -141,13 +139,7 @@ app.post('/api/upload', upload.single('screenshot'), async (req, res) => {
     }
 })();
 
-// Only start server if not in Vercel serverless environment
-if (process.env.VERCEL !== '1') {
-    app.listen(PORT, () => {
-        console.log(`🚀 Server running on http://localhost:${PORT}`);
-        console.log(`📅 Event Days: ${process.env.EVENT_DAY_1}, ${process.env.EVENT_DAY_2}, ${process.env.EVENT_DAY_3}`);
-    });
-}
-
-// Export for Vercel serverless
-module.exports = app;
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📅 Event Days: ${process.env.EVENT_DAY_1}, ${process.env.EVENT_DAY_2}, ${process.env.EVENT_DAY_3}`);
+});

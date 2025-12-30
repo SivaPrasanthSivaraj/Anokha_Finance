@@ -1,0 +1,6 @@
+# Ignore server.js for Vercel builds
+server.js
+uploads/
+*.log
+.env
+node_modules/

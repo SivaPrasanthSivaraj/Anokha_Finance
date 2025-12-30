@@ -14,10 +14,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir);
+// Create uploads directory only if not in serverless environment
+if (process.env.VERCEL !== '1') {
+    const uploadsDir = path.join(__dirname, 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir);
+    }
 }
 
 // Configure multer for file uploads

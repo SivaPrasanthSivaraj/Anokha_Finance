@@ -1,11 +1,19 @@
-require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const os = require('os');
 const fs = require('fs');
+const os = require('os');
 const cors = require('cors');
-const { uploadToCloudinary, verifyConnection } = require('../services/cloudinary');
+
+// Import cloudinary directly to avoid path issues
+const cloudinary = require('cloudinary').v2;
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 const app = express();
 
@@ -13,32 +21,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Use system temp directory for serverless environment
-const uploadsDir = os.tmpdir();
-
-// Configure multer for file uploads (using temp directory)
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadsDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
-
+// Use memory storage for serverless (more reliable)
 const upload = multer({
-    storage: storage,
+    storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
     fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif|pdf/;
+        const allowedTypes = /jpeg|jpg|png|gif|pdf|webp/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
         const mimetype = allowedTypes.test(file.mimetype);
         
         if (mimetype && extname) {
             return cb(null, true);
         } else {
-            cb(new Error('Only image files (JPEG, PNG, GIF) and PDF are allowed!'));
+            cb(new Error('Only image files (JPEG, PNG, GIF, WEBP) and PDF are allowed!'));
         }
     }
 });
@@ -82,8 +77,6 @@ app.post('/api/upload', upload.single('screenshot'), async (req, res) => {
         
         // Validate required fields
         if (!shopName) {
-            // Delete uploaded file if validation fails
-            fs.unlinkSync(req.file.path);
             return res.status(400).json({ 
                 success: false, 
                 message: 'Shop Name is required' 
@@ -93,32 +86,44 @@ app.post('/api/upload', upload.single('screenshot'), async (req, res) => {
         // Get current event day
         const eventDay = getEventDay();
         
-        // Upload to Cloudinary
-        const result = await uploadToCloudinary(
-            req.file.path,
-            req.file.originalname,
-            eventDay.date,
-            { shopName }
-        );
-
-        // Delete local file after successful upload
-        fs.unlinkSync(req.file.path);
+        // Create unique filename with shop name
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const sanitizedShopName = shopName.replace(/[^a-zA-Z0-9]/g, '_');
+        const extension = path.extname(req.file.originalname).toLowerCase();
+        const publicId = `${sanitizedShopName}_${timestamp}`;
+        
+        // Upload buffer directly to Cloudinary (no file system needed)
+        const result = await new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                    folder: `Anokha_Payments/${eventDay.date}`,
+                    public_id: publicId,
+                    resource_type: 'auto',
+                    context: {
+                        shopName: shopName,
+                        uploadDate: new Date().toISOString()
+                    },
+                    tags: [eventDay.date, 'payment', shopName]
+                },
+                (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                }
+            );
+            
+            uploadStream.end(req.file.buffer);
+        });
 
         res.json({
             success: true,
             message: `Payment screenshot uploaded successfully to Day ${eventDay.day}!`,
             eventDay: eventDay.day,
-            url: result.url,
-            fileName: path.basename(result.publicId)
+            url: result.secure_url,
+            fileName: publicId + extension
         });
 
     } catch (error) {
         console.error('Upload error:', error);
-        
-        // Clean up file if it exists
-        if (req.file && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
 
         res.status(500).json({ 
             success: false, 

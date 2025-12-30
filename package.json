@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "build": "echo 'Build complete - static files ready for deployment'",
+    "vercel-build": "echo 'Vercel build complete'"
   },
   "keywords": ["payment", "upload", "cloudinary", "event-management"],
   "author": "",

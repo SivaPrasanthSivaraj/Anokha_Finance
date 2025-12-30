@@ -7,22 +7,39 @@ const cors = require('cors');
 const { uploadToCloudinary, verifyConnection } = require('./services/cloudinary');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir);
+// Use /tmp directory for uploads in production, local uploads folder for dev
+const uploadsDir = process.env.NODE_ENV === 'production' 
+    ? '/tmp/uploads' 
+    : path.join(__dirname, 'uploads');
+
+// Ensure uploads directory exists
+try {
+    if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+} catch (error) {
+    console.error('Could not create uploads directory:', error);
+    // Continue anyway, will fail at upload time if needed
 }
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
+        // Ensure directory exists before each upload
+        try {
+            if (!fs.existsSync(uploadsDir)) {
+                fs.mkdirSync(uploadsDir, { recursive: true });
+            }
+        } catch (error) {
+            console.error('Upload directory error:', error);
+        }
         cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
@@ -139,7 +156,7 @@ app.post('/api/upload', upload.single('screenshot'), async (req, res) => {
     }
 })();
 
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📅 Event Days: ${process.env.EVENT_DAY_1}, ${process.env.EVENT_DAY_2}, ${process.env.EVENT_DAY_3}`);
 });

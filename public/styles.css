@@ -42,6 +42,22 @@ body {
     animation: slideUp 0.4s ease-out;
 }
 
+.logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.logo {
+    max-height: 60px;
+    width: auto;
+    object-fit: contain;
+}
+
 @keyframes slideUp {
     from {
         opacity: 0;
@@ -286,6 +302,14 @@ body {
 
     .upload-card {
         padding: 24px 20px;
+    }
+    
+    .logo-container {
+        gap: 16px;
+    }
+    
+    .logo {
+        max-height: 50px;
     }
 
     .header h1 {
